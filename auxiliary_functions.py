@@ -11,3 +11,31 @@ def checkmousestate(button, display, pygame):
         for event in pygame.event.get(eventtype=pygame.MOUSEBUTTONDOWN):
             if event.button == 1:
                 return True
+
+#Renders a leaderboard with the scores stored in leaderboard.txt
+def call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, fpsClock, FPS):
+    start_time = time.time()
+
+    Leader_board_Render = True            
+    while Leader_board_Render == True:
+        
+        for event in pygame.event.get(eventtype=pygame.QUIT):
+            pygame.quit()
+            sys.exit()
+
+        pygame.draw.rect(screen, 'white', (displayx/2 -152, 20, 304, 340))
+        pygame.draw.rect(screen, 'black', (displayx/2 -150, 22, 300, 336))
+        screen.blit(titlefont.render("Top 10", False, 'white'), (displayx/2 -45, 35))
+
+        with open('Coding\Fundamentos de Programação\Heavy-Ordnance\leaderboard.txt', 'r+') as fread: 
+            n = 0  #Increments for every line in leaderboard.txt, rendering every line one above another
+            for line in fread:
+                n += 1
+                screen.blit(bodyfont.render(line.replace('\n',""), False, 'white'), (displayx/2 -35, 75 + 25 * n))
+        
+        if (time.time() - start_time) > 6:
+            Leader_board_Render = False
+
+
+        pygame.display.update()
+        fpsClock.tick(FPS)

@@ -9,7 +9,7 @@ def PygameInit():
     
     fpsClock=pygame.time.Clock()
     FPS = 30 
-    displayx, displayy = 1920, 1080
+    displayx, displayy = 1000, 380
     screen = pygame.display.set_mode((displayx, displayy))
     titlefont = pygame.font.SysFont('Comic Sans MS', 30)
     bodyfont = pygame.font.SysFont('Comic Sans MS', 15)
@@ -17,8 +17,9 @@ def PygameInit():
 def StartScreen():
 
     #defines button rectangles
-    start_button = pygame.Rect(displayx/2 -100, displayy/2 -25, 200, 50)
-    exit_button = pygame.Rect(displayx/2 - 100, displayy/2 +50, 200, 50)
+    start_button = pygame.Rect(displayx/2 -100, displayy/2 -45, 200, 50)
+    leaderboard_button = pygame.Rect(displayx/2 - 100, displayy/2 +30, 200, 50)
+    exit_button = pygame.Rect(displayx/2 - 100, displayy/2 +105, 200, 50)
     
 
     start = True
@@ -34,13 +35,20 @@ def StartScreen():
         
         pygame.draw.rect(screen, 'white', start_button, 1)
         pygame.draw.rect(screen, 'white', exit_button, 1)
+        pygame.draw.rect(screen, 'white', leaderboard_button, 1)
 
-        screen.blit(titlefont.render("Heavy Ordenance", False, 'white'), (displayx/2 - 124, 100))
+        screen.blit(titlefont.render("Heavy Ordenance", False, 'white'), (displayx/2 - 124, 80))
         screen.blit(bodyfont.render("Start", False, 'white'), (start_button[0] +75, start_button[1] +15))
         screen.blit(bodyfont.render("Exit", False, 'white'), (exit_button[0] +75, exit_button[1] +15))
+        screen.blit(bodyfont.render("Leaderboard", False, 'white'), (leaderboard_button[0] +45, leaderboard_button[1] +15))
         
         if checkmousestate(start_button, screen, pygame) == True:
             start = False
+
+        elif checkmousestate(leaderboard_button, screen, pygame) == True:
+            #This function renders the leaderboard with all the scores
+            call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, fpsClock, FPS)
+
         elif checkmousestate(exit_button, screen, pygame) == True:
             pygame.quit()
             sys.exit()
@@ -123,9 +131,9 @@ def LeaderboardScreen():
     pygame.K_y : "Y",
     pygame.K_z : "Z",
 }   
-
+    Score = 0
     if Score > 0: #if current score is above 0, it starts the leaderboard related operations
-        with open('Leaderboard.txt', 'r+') as fread: #opens leaderboard.txt in read and write mode:
+        with open('leaderboard.txt', 'r+') as fread: #opens leaderboard.txt in read and write mode:
             leaderboardtext = fread.readlines()
             line_num = 0 #initalizes a line counter to keep track of current line
             for line in leaderboardtext: #checks each line for a score
@@ -166,28 +174,5 @@ def LeaderboardScreen():
                             fwrite.write(line)
                     line_num += 1
     
-    start_time = time.time()
-
-    Leader_board_Render = True            
-    while Leader_board_Render == True:
-        
-        for event in pygame.event.get(eventtype=pygame.QUIT):
-            pygame.quit()
-            sys.exit()
-
-        pygame.draw.rect(screen, 'white', (displayx/2 -152, 48, 304, 504))
-        pygame.draw.rect(screen, 'black', (displayx/2 -150, 50, 300, 500))
-        screen.blit(titlefont.render("Top 10", False, 'white'), (displayx/2 -25, 75))
-
-        with open('Leaderboard.txt', 'r+') as fread: 
-            n = 0  #Increments for every line in leaderboard.txt, rendering every line one above another
-            for line in fread:
-                n += 1
-                screen.blit(bodyfont.render(line.replace('\n',""), False, 'white'), (displayx/2 -35, 150 + 25 * n))
-        
-        if (time.time() - start_time) > 6:
-            Leader_board_Render = False
-
-
-        pygame.display.update()
-        fpsClock.tick(FPS)
+    #This function renders the leaderboard with all the scores
+    call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, fpsClock, FPS)
