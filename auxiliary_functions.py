@@ -27,7 +27,7 @@ def call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, f
         pygame.draw.rect(screen, 'black', (displayx/2 -150, 22, 300, 336))
         screen.blit(titlefont.render("Top 10", False, 'white'), (displayx/2 -45, 35))
 
-        with open('Coding\Fundamentos de Programação\Heavy-Ordnance\leaderboard.txt', 'r+') as fread: 
+        with open('leaderboard.txt', 'r+') as fread: 
             n = 0  #Increments for every line in leaderboard.txt, rendering every line one above another
             for line in fread:
                 n += 1
