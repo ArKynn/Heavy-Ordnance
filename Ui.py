@@ -311,6 +311,7 @@ def LeaderboardScreen():
             line_num = 0 #initalizes a line counter to keep track of current line
             for line in leaderboardtext: #checks each line for a score
                 saved_score = line[4] + line[5] + line[6] + line[7] #temporarily saves the read score
+                print (saved_score, Score)
                 if int(saved_score) < Score: #checks is saved score is smaller than current score
 
                     initials = "" 
@@ -345,7 +346,7 @@ def LeaderboardScreen():
                     with open('Leaderboard.txt', 'w') as fwrite:
                         for line in leaderboardtext:
                             fwrite.write(line)
-                    line_num += 1
+                line_num += 1
     
     #This function renders the leaderboard with all the scores
     call_leaderboard(time, pygame, screen, display_x, sys, titlefont, bodyfont, fpsClock, FPS)
