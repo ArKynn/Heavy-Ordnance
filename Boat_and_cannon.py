@@ -1,26 +1,16 @@
+import pygame, random, math
+from pygame import Vector2, K_LEFT, K_RIGHT, K_SPACE
 
-import pygame, sys
-import numpy as np
-from pygame.math import Vector2
-from pygame.locals import *
-import math
-import random
 
-from pygame.locals import (
-    K_ESCAPE
-)
-
-# Define constants for the screen width and height
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 388
+displayx, displayy = 1000, 380
 
 boatsVelocity = -1
 destroyedBoatCounter = 0
 
-def ThereAreNoBoatsInStartArea():
+def ThereAreNoBoatsInStartArea(boats, displayx):
     ret = True
     for eachBoat in boats:
-        if eachBoat.rect.right>SCREEN_WIDTH and eachBoat.Time==None:
+        if eachBoat.rect.right>displayx and eachBoat.Time==None:
             ret = False
             break
     return ret
@@ -81,7 +71,7 @@ class Cannon(pygame.sprite.Sprite):
             if self.angle<0:
                 self.angle=360
             self.rotateSprite()
-           
+        
     # Function to rotate an image based on example in https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
     def rotateSprite(self):
         image_rect = self.rect
@@ -124,12 +114,12 @@ class Bullet(pygame.sprite.Sprite):
         self.position.y = self.initial_pos_y - self.velocity * self.time * math.sin(self.angle * GTR) + 0.5 * g * self.time**2
         self.rect.center = self.position
 
-        if self.position.x>SCREEN_WIDTH:
+        if self.position.x>displayx:
             self.kill()
 
-        if self.position.y>SCREEN_HEIGHT:
+        if self.position.y>displayy:
             self.kill()
-       
+    
 
 # Define the Boat object by extending pygame.sprite.Sprite
 class Boat(pygame.sprite.Sprite):
@@ -141,7 +131,7 @@ class Boat(pygame.sprite.Sprite):
     def reset(self):      
         self.surf = pygame.image.load("boat"+str(self.size)+".png").convert_alpha()
         self.surf = pygame.transform.scale(self.surf , (self.surf.get_rect().width*0.20, self.surf.get_rect().height*0.20))
-        self.loc_x = SCREEN_WIDTH + 100
+        self.loc_x = displayx + 100
         self.loc_y = 300
         self.rect = self.surf.get_rect(
             center=(
@@ -170,151 +160,10 @@ class Boat(pygame.sprite.Sprite):
                         (self.loc_x , self.loc_y),
                     )
                 )
-
+    def check_time(self):
         if self.Time is not None:
-            if pygame.time.get_ticks()-self.Time > self.waitTime and ThereAreNoBoatsInStartArea():
+            if pygame.time.get_ticks()-self.Time > self.waitTime and ThereAreNoBoatsInStartArea(boats, pygame.display):
                 self.velocity  = boatsVelocity
                 self.Time = None
 
-
-# Initialize pygame
-pygame.init()
-pygame.display.set_caption("Heavy Ordenance")
-screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
-
-fpsClock=pygame.time.Clock()
-FPS = 30 
-
-DangerZone_X = 100
-
-# Create custom events for adding new entities
-ADDBOAT = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDBOAT, 4000)
-
-# Create groups to hold sprites
-boats = pygame.sprite.Group()
-dead_boats = pygame.sprite.Group()
-
-#cannon creation
-cannon = Cannon()
-
-# boats creation
-for i in range(1,5):
-    new_boat = Boat(random.randint(1,5))
-    dead_boats.add(new_boat)
-
-bg = pygame.image.load("bg1.png")
-cannon_base = pygame.image.load("cannon_base.png")
-
-running = True
-boats_count = 0
-
-mouse_pos = pygame.mouse.get_pos()
-
-cannon_power = 0
-power = 0
-
-while running: 
-    cannon_power = cannon_power + power
-    if cannon_power>100:
-        cannon_power = 100
-
-    for event in pygame.event.get():
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                power = 0.2
-                
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                if cannon.shoot_timer == None:
-                    cannon.shoot_timer = pygame.time.get_ticks()
-                    new_bullet = Bullet(cannon.position + Vector2(50,-50).rotate(cannon.angle), 40+cannon_power,45 - cannon.angle)
-                    bullets.add(new_bullet)
-                    power = 0
-                    cannon_power = 0
-              
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-
-        # Check for KEYDOWN event
-        if event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
-                running = False
-            
-        elif event.type == QUIT:
-            running = False
-
-        # Add a new boat?
-        elif event.type == ADDBOAT:
-            # spawn a new boat
-            if len(dead_boats)>0 and boats_count<4:
-                boats_count = boats_count + 1
-                aboat = random.choice(list(dead_boats))
-                boats.add(aboat)
-                aboat.size=random.randint(1,5)
-                aboat.reset()
-                dead_boats.remove(aboat)
-
-    # Get the set of keys pressed and check for user input
-    pressed_keys = pygame.key.get_pressed()
-
-    if mouse_pos[0] < pygame.mouse.get_pos()[0]:
-        cannon.rotateRight()
-
-    if mouse_pos[0] > pygame.mouse.get_pos()[0]:
-        cannon.rotateLeft()
-
-    mouse_pos = pygame.mouse.get_pos()
-
-    # Update the position of boats 
-    boats.update()
-
-    #update cannon
-    cannon.update(pressed_keys)
-
-     # Update the position of bullets 
-    bullets.update()
-
-
-    # check if boat as entered danger zone
-    for eachBoat in boats:
-        if eachBoat.rect.left < DangerZone_X:
-            eachBoat.size=random.randint(1,5)
-            eachBoat.reset()
-            eachBoat.wait_to_move()
-            destroyedBoatCounter = destroyedBoatCounter + 1
-            # falta afetar a vida do player aqui!!!!!!
-
-    # check if any bullet have collided with any boat
-    for eachBoat in boats:
-        collider_bullet = pygame.sprite.spritecollideany(eachBoat,bullets)
-        if collider_bullet:
-            collider_bullet.kill()
-            eachBoat.size=random.randint(1,5)
-            eachBoat.reset()
-            eachBoat.wait_to_move()
-            destroyedBoatCounter = destroyedBoatCounter + 1
-            # falta afetar os pontos aqui!!!!!!
-
-    #upgrade boats velocity each 10 destroyed boats
-    if destroyedBoatCounter == 10:
-        destroyedBoatCounter = 0
-        boatsVelocity = boatsVelocity * 1.5
-
-    # Fill the screen with a background
-    screen.blit(bg, bg.get_rect())
-
-    # Draw all sprites
-    for entity in bullets:
-        screen.blit(entity.surf, entity.rect)
-
-    for entity in boats:
-        screen.blit(entity.surf, entity.rect)
-
-    screen.blit(cannon.surf, cannon.rect)
-
-    screen.blit(cannon_base, (cannon.position.x-40,cannon.position.y+1))
-
-    pygame.display.update()
-    fpsClock.tick(FPS)
+    

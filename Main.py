@@ -1,12 +1,13 @@
 from Ui import *
 
 while True:
+    
     PygameInit()
 
     StartScreen()
 
-    #GameScreen()
+    GameScreen()
 
-    #EndScreen()
+    EndScreen()
 
     LeaderboardScreen()
