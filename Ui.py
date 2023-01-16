@@ -111,7 +111,7 @@ def GameScreen():
             cannon_power = 100
 
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and len(bullets)<2:
                 if event.button == 1:
                     power = 1
                     
