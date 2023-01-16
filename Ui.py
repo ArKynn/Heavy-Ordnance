@@ -64,6 +64,7 @@ def StartScreen():
 
 
 def GameScreen():
+    global Score
 
     # Create custom events for adding new entities
     ADDBOAT = pygame.USEREVENT + 1
@@ -95,12 +96,19 @@ def GameScreen():
     cannon_power = 0
     power = 0
 
+    Hp = 3
+    Score = 0
 
-    score = 0
-    boatscorelvl = 0
+    boatscore = 0
+    boatscorelvl = 1
     destroyedBoatCounter = 0
     was_boat_destroyed = 0
-    startgametime = time.time()
+
+    init_hp_img = pygame.image.load('Heart.png')
+    hp_img = pygame.transform.scale(init_hp_img, (25, 25))
+
+    gametime = time.time()
+ 
 
 
     game = True
@@ -115,7 +123,7 @@ def GameScreen():
                 if event.button == 1:
                     power = 1
                     
-            if event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
                     if cannon.shoot_timer == None and len(bullets)<2:
                         cannon.shoot_timer = pygame.time.get_ticks()
@@ -125,17 +133,15 @@ def GameScreen():
                         cannon_power = 0    
                     
                 
-            if event.type == QUIT:
+            elif event.type == QUIT:
                 pygame.quit()
                 sys.exit()
 
             # Check for KEYDOWN event
-            if event.type == KEYDOWN:
+            elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    running = False
-                
-            elif event.type == QUIT:
-                running = False
+                    game = False
+            
 
             # Add a new boat?
             elif event.type == ADDBOAT:
@@ -176,7 +182,9 @@ def GameScreen():
                 eachBoat.reset()
                 eachBoat.wait_to_move()
                 destroyedBoatCounter = destroyedBoatCounter + 1
-                # falta afetar a vida do player aqui!!!!!!
+                Hp += -1
+                if Hp == 0:
+                    game = False
 
         # check if any bullet have collided with any boat
         for eachBoat in boats:
@@ -185,16 +193,17 @@ def GameScreen():
                 collider_bullet.kill()
                 #aumentar pontuação dependendo do tamanho do barco que sofreu a colisão
                 #pontuacao = pontuacao + (6 - eachBoat.size)
-                
+                was_boat_destroyed = 1
+                boatscore = 6 - eachBoat.size
                 #"novo" barco aparece parado (escondido na "spawn area") re-feito (com outro tamanho aleatorio) a partir do que sofreu a colisão
                 eachBoat.size = random.randint(1,5)
                 eachBoat.reset()
                 eachBoat.wait_to_move()
                 destroyedBoatCounter = destroyedBoatCounter + 1
-                was_boat_destroyed = 1
+                
 
 
-        #upgrade boats velocity each 10 destroyed boats
+        #upgrade boats velocity and point multiplier each 10 destroyed boats
         if destroyedBoatCounter == 10:
             destroyedBoatCounter = 0
             boatsVelocity = boatsVelocity * 1.5
@@ -203,14 +212,15 @@ def GameScreen():
         #manages the score throughout the game
         current_time = time.time()
         timescore = 0
-        if current_time - startgametime == 1:
+        if current_time - gametime >= 1:
+            gametime = time.time()
             timescore = 1
 
-        boatscore = 0
         if was_boat_destroyed == 1:
-            boatscore = 1 * boatscorelvl
+            boatscore = boatscore * boatscorelvl
 
-        score = score + timescore + boatscore
+        Score = Score + timescore + boatscore
+        timescore, boatscore = 0, 0
 
         # Fill the screen with a background
         screen.blit(bg, bg.get_rect())
@@ -226,8 +236,13 @@ def GameScreen():
 
         screen.blit(cannon_base, (cannon.position.x-40,cannon.position.y+1))
 
-        screen.blit(bodyfont.render(f"Score: {score}", True, 'white'), (display_x - 125, 50))
+        screen.blit(bodyfont.render(f"Score: {Score}", True, 'Black'), (display_x - 85, 50))
 
+        screen.blit(bodyfont.render(f"ESC: Finish Game", True, "Black"),(15, 20))
+
+        for x in range(1, Hp+1):
+            screen.blit(hp_img, (display_x - 25 - 10 * x, 20))
+            
         pygame.display.update()
         fpsClock.tick(FPS)
 
@@ -242,7 +257,7 @@ def EndScreen():
             sys.exit()
 
         #renders GameOver on screen
-        screen.blit(titlefont.render("Game Over", True, 'White'), (display_x/2 -100, display_y/2 -25))
+        screen.blit(titlefont.render("Game Over", True, 'Black'), (display_x/2 -100, display_y/2 -25))
 
         #gets current time, if 3 seconds since gameover have passed, proceed to leaderboard
         if (time.time() - end_time) > 3:
@@ -289,7 +304,7 @@ def LeaderboardScreen():
     pygame.K_y : "Y",
     pygame.K_z : "Z",
 }   
-    Score = 0
+
     if Score > 0: #if current score is above 0, it starts the leaderboard related operations
         with open('leaderboard.txt', 'r+') as fread: #opens leaderboard.txt in read and write mode:
             leaderboardtext = fread.readlines()
@@ -303,10 +318,10 @@ def LeaderboardScreen():
                         
                         screen.fill('black')
                         
-                        pygame.draw.rect(screen, 'white', (display_x/2 -152, 48, 304, 504))
-                        pygame.draw.rect(screen, 'black', (display_x/2 -150, 50, 300, 500))
+                        pygame.draw.rect(screen, 'white', (display_x/2 -152, 20, 304, 340))
+                        pygame.draw.rect(screen, 'black', (display_x/2 -150, 22, 300, 336))
                         screen.blit(bodyfont.render("Insert your 3 initials", False, 'white'), (display_x/2 - 75, display_y/2 - 25))
-                        screen.blit(bodyfont.render(f"Initials : {initials}", False, 'white'), (display_x/2 - 25, display_y/2))
+                        screen.blit(bodyfont.render(f"Initials : {initials}", False, 'white'), (display_x/2 - 35, display_y/2))
                         
                         for event in pygame.event.get(eventtype=pygame.KEYDOWN):
                             try:
