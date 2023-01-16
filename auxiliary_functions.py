@@ -13,7 +13,7 @@ def checkmousestate(button, display, pygame):
                 return True
 
 #Renders a leaderboard with the scores stored in leaderboard.txt
-def call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, fpsClock, FPS):
+def call_leaderboard(time, pygame, screen, display_x, sys, titlefont, bodyfont, fpsClock, FPS):
     start_time = time.time()
 
     Leader_board_Render = True            
@@ -23,15 +23,15 @@ def call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, f
             pygame.quit()
             sys.exit()
 
-        pygame.draw.rect(screen, 'white', (displayx/2 -152, 20, 304, 340))
-        pygame.draw.rect(screen, 'black', (displayx/2 -150, 22, 300, 336))
-        screen.blit(titlefont.render("Top 10", False, 'white'), (displayx/2 -45, 35))
+        pygame.draw.rect(screen, 'white', (display_x/2 -152, 20, 304, 340))
+        pygame.draw.rect(screen, 'black', (display_x/2 -150, 22, 300, 336))
+        screen.blit(titlefont.render("Top 10", False, 'white'), (display_x/2 -45, 35))
 
         with open('leaderboard.txt', 'r+') as fread: 
             n = 0  #Increments for every line in leaderboard.txt, rendering every line one above another
             for line in fread:
                 n += 1
-                screen.blit(bodyfont.render(line.replace('\n',""), False, 'white'), (displayx/2 -35, 75 + 25 * n))
+                screen.blit(bodyfont.render(line.replace('\n',""), False, 'white'), (display_x/2 -35, 75 + 25 * n))
         
         if (time.time() - start_time) > 6:
             Leader_board_Render = False

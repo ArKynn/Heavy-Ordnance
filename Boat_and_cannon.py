@@ -2,15 +2,15 @@ import pygame, random, math
 from pygame import Vector2, K_LEFT, K_RIGHT, K_SPACE
 
 
-displayx, displayy = 1000, 380
+display_x, display_y = 1000, 380
 
-boatsVelocity = -1
+
 destroyedBoatCounter = 0
 
-def ThereAreNoBoatsInStartArea(boats, displayx):
+def ThereAreNoBoatsInStartArea(boats):
     ret = True
     for eachBoat in boats:
-        if eachBoat.rect.right>displayx and eachBoat.Time==None:
+        if eachBoat.rect.right>display_x and eachBoat.Time==None:
             ret = False
             break
     return ret
@@ -56,7 +56,7 @@ class Cannon(pygame.sprite.Sprite):
 
     def rotateLeft(self):
         if ((self.position + Vector2(50,-50).rotate(self.angle)).x>self.position.x) and ((self.position + Vector2(50,-50).rotate(self.angle)).y>self.position.y-90):
-            self.angle = self.angle - 5
+            self.angle = self.angle - 3.5
             if self.angle>360:
                 self.angle=0
             if self.angle<0:
@@ -65,7 +65,7 @@ class Cannon(pygame.sprite.Sprite):
 
     def rotateRight(self):
         if ((self.position + Vector2(50,-50).rotate(self.angle)).y<self.position.y):
-            self.angle = self.angle + 5
+            self.angle = self.angle + 3.5
             if self.angle>360:
                 self.angle=0
             if self.angle<0:
@@ -114,56 +114,51 @@ class Bullet(pygame.sprite.Sprite):
         self.position.y = self.initial_pos_y - self.velocity * self.time * math.sin(self.angle * GTR) + 0.5 * g * self.time**2
         self.rect.center = self.position
 
-        if self.position.x>displayx:
+        if self.position.x>display_x:
             self.kill()
 
-        if self.position.y>displayy:
+        if self.position.y>display_y:
             self.kill()
     
 
 # Define the Boat object by extending pygame.sprite.Sprite
 class Boat(pygame.sprite.Sprite):
-    def __init__(self, size):
+    def __init__(self, size, velocity):
         super(Boat, self).__init__()
         self.size = size
+        self.velocity = velocity
+        self.initialVelocity = velocity
         self.reset()
 
     def reset(self):      
         self.surf = pygame.image.load("boat"+str(self.size)+".png").convert_alpha()
         self.surf = pygame.transform.scale(self.surf , (self.surf.get_rect().width*0.20, self.surf.get_rect().height*0.20))
-        self.loc_x = displayx + 100
+        self.loc_x = display_x + 100
         self.loc_y = 300
         self.rect = self.surf.get_rect(
             center=(
                 (self.loc_x , self.loc_y),
             )
         )
-        self.velocity = boatsVelocity
-        self.wasHited = False
         self.Time = None
-        self.NotDead = True
         self.waitTime = random.randint(0,8000)
 
     def wait_to_move(self):
         self.velocity = 0
         self.Time = pygame.time.get_ticks()
 
-    def update(self):
+    def update(self, boats):
         # Move the sprite based on velocity
-        if self.NotDead: 
-            if self.wasHited:
-                pass
-            else:
-                self.loc_x = self.loc_x + self.velocity
-                self.rect = self.surf.get_rect(
-                    center=(
-                        (self.loc_x , self.loc_y),
-                    )
-                )
-    def check_time(self):
+        self.loc_x = self.loc_x + self.velocity
+        self.rect = self.surf.get_rect(
+            center=(
+                (self.loc_x , self.loc_y),
+            )
+        )
+
         if self.Time is not None:
-            if pygame.time.get_ticks()-self.Time > self.waitTime and ThereAreNoBoatsInStartArea(boats, pygame.display):
-                self.velocity  = boatsVelocity
+            if pygame.time.get_ticks()-self.Time > self.waitTime and ThereAreNoBoatsInStartArea(boats):
+                self.velocity  = self.initialVelocity
                 self.Time = None
 
     

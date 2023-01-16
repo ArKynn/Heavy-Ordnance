@@ -5,7 +5,7 @@ from auxiliary_functions import *
 from Boat_and_cannon import *
 
 def PygameInit():
-    global screen, titlefont, bodyfont, displayx, displayy, fpsClock, FPS
+    global screen, titlefont, bodyfont, display_x, display_y, fpsClock, FPS
 
     pygame.init()
     pygame.font.init()
@@ -14,7 +14,7 @@ def PygameInit():
     FPS = 30 
 
     
-    screen = pygame.display.set_mode((displayx, displayy))
+    screen = pygame.display.set_mode((display_x, display_y))
     pygame.display.set_caption("Heavy Ordenance")
 
     titlefont = pygame.font.SysFont('Comic Sans MS', 30)
@@ -23,9 +23,9 @@ def PygameInit():
 def StartScreen():
 
     #defines button rectangles
-    start_button = pygame.Rect(displayx/2 -100, displayy/2 -45, 200, 50)
-    leaderboard_button = pygame.Rect(displayx/2 - 100, displayy/2 +30, 200, 50)
-    exit_button = pygame.Rect(displayx/2 - 100, displayy/2 +105, 200, 50)
+    start_button = pygame.Rect(display_x/2 -100, display_y/2 -45, 200, 50)
+    leaderboard_button = pygame.Rect(display_x/2 - 100, display_y/2 +30, 200, 50)
+    exit_button = pygame.Rect(display_x/2 - 100, display_y/2 +105, 200, 50)
     
 
     start = True
@@ -43,7 +43,7 @@ def StartScreen():
         pygame.draw.rect(screen, 'white', exit_button, 1)
         pygame.draw.rect(screen, 'white', leaderboard_button, 1)
 
-        screen.blit(titlefont.render("Heavy Ordenance", False, 'white'), (displayx/2 - 124, 80))
+        screen.blit(titlefont.render("Heavy Ordenance", False, 'white'), (display_x/2 - 124, 80))
         screen.blit(bodyfont.render("Start", False, 'white'), (start_button[0] +75, start_button[1] +15))
         screen.blit(bodyfont.render("Exit", False, 'white'), (exit_button[0] +75, exit_button[1] +15))
         screen.blit(bodyfont.render("Leaderboard", False, 'white'), (leaderboard_button[0] +45, leaderboard_button[1] +15))
@@ -53,7 +53,7 @@ def StartScreen():
 
         elif checkmousestate(leaderboard_button, screen, pygame) == True:
             #This function renders the leaderboard with all the scores
-            call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, fpsClock, FPS)
+            call_leaderboard(time, pygame, screen, display_x, sys, titlefont, bodyfont, fpsClock, FPS)
 
         elif checkmousestate(exit_button, screen, pygame) == True:
             pygame.quit()
@@ -75,10 +75,12 @@ def GameScreen():
 
     #cannon creation
     cannon = Cannon()
+    
+    boatsVelocity = -1
 
     # boats creation
     for i in range(1,5):
-        new_boat = Boat(random.randint(1,5))
+        new_boat = Boat(random.randint(1,5), boatsVelocity)
         dead_boats.add(new_boat)
 
     DangerZone_X = 100
@@ -92,6 +94,7 @@ def GameScreen():
 
     cannon_power = 0
     power = 0
+
 
     score = 0
     boatscorelvl = 0
@@ -110,11 +113,11 @@ def GameScreen():
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    power = 0.2
+                    power = 1
                     
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
-                    if cannon.shoot_timer == None:
+                    if cannon.shoot_timer == None and len(bullets)<2:
                         cannon.shoot_timer = pygame.time.get_ticks()
                         new_bullet = Bullet(cannon.position + Vector2(50,-50).rotate(cannon.angle), 40+cannon_power,45 - cannon.angle)
                         bullets.add(new_bullet)
@@ -148,16 +151,16 @@ def GameScreen():
         # Get the set of keys pressed and check for user input
         pressed_keys = pygame.key.get_pressed()
 
-        if mouse_pos[0] < pygame.mouse.get_pos()[0]:
+        if mouse_pos[0] < pygame.mouse.get_pos()[0] and mouse_pos[0]>display_x/2:
             cannon.rotateRight()
 
-        if mouse_pos[0] > pygame.mouse.get_pos()[0]:
+        if mouse_pos[0] > pygame.mouse.get_pos()[0] and mouse_pos[0]<display_x/2:
             cannon.rotateLeft()
 
         mouse_pos = pygame.mouse.get_pos()
 
         # Update the position of boats 
-        boats.update()
+        boats.update(boats)
 
         #update cannon
         cannon.update(pressed_keys)
@@ -180,11 +183,16 @@ def GameScreen():
             collider_bullet = pygame.sprite.spritecollideany(eachBoat,bullets)
             if collider_bullet:
                 collider_bullet.kill()
-                eachBoat.size=random.randint(1,5)
+                #aumentar pontuação dependendo do tamanho do barco que sofreu a colisão
+                #pontuacao = pontuacao + (6 - eachBoat.size)
+                
+                #"novo" barco aparece parado (escondido na "spawn area") re-feito (com outro tamanho aleatorio) a partir do que sofreu a colisão
+                eachBoat.size = random.randint(1,5)
                 eachBoat.reset()
                 eachBoat.wait_to_move()
                 destroyedBoatCounter = destroyedBoatCounter + 1
                 was_boat_destroyed = 1
+
 
         #upgrade boats velocity each 10 destroyed boats
         if destroyedBoatCounter == 10:
@@ -218,7 +226,7 @@ def GameScreen():
 
         screen.blit(cannon_base, (cannon.position.x-40,cannon.position.y+1))
 
-        screen.blit(bodyfont.render(f"Score: {score}", True, 'white'), (displayx - 125, 50))
+        screen.blit(bodyfont.render(f"Score: {score}", True, 'white'), (display_x - 125, 50))
 
         pygame.display.update()
         fpsClock.tick(FPS)
@@ -234,7 +242,7 @@ def EndScreen():
             sys.exit()
 
         #renders GameOver on screen
-        screen.blit(titlefont.render("Game Over", True, 'White'), (displayx/2 -100, displayy/2 -25))
+        screen.blit(titlefont.render("Game Over", True, 'White'), (display_x/2 -100, display_y/2 -25))
 
         #gets current time, if 3 seconds since gameover have passed, proceed to leaderboard
         if (time.time() - end_time) > 3:
@@ -295,10 +303,10 @@ def LeaderboardScreen():
                         
                         screen.fill('black')
                         
-                        pygame.draw.rect(screen, 'white', (displayx/2 -152, 48, 304, 504))
-                        pygame.draw.rect(screen, 'black', (displayx/2 -150, 50, 300, 500))
-                        screen.blit(bodyfont.render("Insert your 3 initials", False, 'white'), (displayx/2 - 75, displayy/2 - 25))
-                        screen.blit(bodyfont.render(f"Initials : {initials}", False, 'white'), (displayx/2 - 25, displayy/2))
+                        pygame.draw.rect(screen, 'white', (display_x/2 -152, 48, 304, 504))
+                        pygame.draw.rect(screen, 'black', (display_x/2 -150, 50, 300, 500))
+                        screen.blit(bodyfont.render("Insert your 3 initials", False, 'white'), (display_x/2 - 75, display_y/2 - 25))
+                        screen.blit(bodyfont.render(f"Initials : {initials}", False, 'white'), (display_x/2 - 25, display_y/2))
                         
                         for event in pygame.event.get(eventtype=pygame.KEYDOWN):
                             try:
@@ -325,4 +333,4 @@ def LeaderboardScreen():
                     line_num += 1
     
     #This function renders the leaderboard with all the scores
-    call_leaderboard(time, pygame, screen, displayx, sys, titlefont, bodyfont, fpsClock, FPS)
+    call_leaderboard(time, pygame, screen, display_x, sys, titlefont, bodyfont, fpsClock, FPS)
